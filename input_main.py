@@ -7,13 +7,12 @@ from os import popen, truncate
 from time import gmtime, strftime
 from traceback import print_tb
 
-import lxml
 import requests
 from bs4 import BeautifulSoup
 
 start = time.time()
 
-fichier = 'data_beta.json'
+fichier = 'data_beta_2.json'
 
 ifnotfolder = ["1", "001", "0001", "0", "00"]
 
@@ -36,14 +35,13 @@ def autosave(data):
     return data
 
 def aff(nb, i, string):
-    data = read()
     pourcentage = i / nb * 100
     return print(string + " {:.2f}".format(pourcentage) + "% Manga : " + data[str(i)]["manga"])
 
 def recup(url):
     response = requests.get(url)
     if response.ok:
-        soup = BeautifulSoup(response.text, 'lxml')
+        soup = BeautifulSoup(response.text, 'html5lib')
         list = soup.findAll("a", href=True)
         del list[0:5]
         links = []
@@ -59,7 +57,7 @@ def init(url):
     response = requests.get(url)
     i = -1
     if response.ok:
-        soup = BeautifulSoup(response.text, 'lxml')
+        soup = BeautifulSoup(response.text, 'html5lib')
         list = soup.findAll("a", href=True)
         del list[0:5]
         nb = len(list)
@@ -133,7 +131,6 @@ def p3(x):
     return data
 
 def update_now(x):
-    data = read()
     now = datetime.datetime.now()
     data[str(x)]["last_check"] = now.strftime("%Y-%m-%d %H:%M")
     return data
@@ -168,7 +165,6 @@ def fusion_update(data_update):
     return list
 
 def last_update(url):
-    data = read()
     list_data_update = recup_update(url)
     for date in list_data_update:
         r = date.split("|")
@@ -185,7 +181,6 @@ def last_update(url):
     return update
 
 def update_chap(x):
-    data = read()
     if str(data[str(x)]["last_update"]) > str(data[str(x)]["last_check"]):
         #aff(nb, x, "Nouvelle mise à jour : ")
         if data[str(x)]["folder"] == True:
@@ -194,11 +189,8 @@ def update_chap(x):
             p2_update_recup(x, data[str(x)]["link_nomManga"])
     else:
         aff(nb, x, "Aucune mise à jour : ")
-        data = update_now(x)
-    return data
 
 def p2_update_recup(x, list):
-    data = read()
     if not type(str()) == type(list):
         print("type(str()) == type(list)")
         for notfolder in ifnotfolder:
@@ -214,9 +206,9 @@ def p2_update_recup(x, list):
                         data[str(x)]["link_chapter"] = url_g
                         data[str(x)]["nb_chap"] = str(
                             len(data[str(x)]["link_chapter"]))
-                        data = p3_update_recup(x, url_g)
-                data = update_now(x)
-                return data
+                        dat = p3_update_recup(x, url_g)
+                dat = update_now(x)
+                return dat
             else:
                 url_g = recup(list)
                 for h in url_g:
@@ -226,12 +218,11 @@ def p2_update_recup(x, list):
                     data[str(x)]["link_chapter"] = url_g
                     data[str(x)]["nb_chap"] = str(
                         len(data[str(x)]["link_chapter"]))
-                    data = p3_update_recup(x, url_g)
-                data = update_now(x)
-                return data
+                    dat = p3_update_recup(x, url_g)
+                dat = update_now(x)
+                return dat
 
 def p3_update_recup(x, list):
-    data = read()
     for url_chapters in list:
         links_chapters = recup(url_chapters)
         url_split = url_chapters.split("/")
